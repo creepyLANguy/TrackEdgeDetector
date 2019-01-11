@@ -26,7 +26,7 @@ Mask* mask = nullptr;
 //Store all edge points that we find in here.
 vector<pair<int, int>> edges;
 
-BMP source, output;
+BMP source;
 
 Pixel* p = nullptr;
 
@@ -207,26 +207,24 @@ bool GetNextPoint(Mask mask)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void DrawEdgesToOutputAndSave(const bool saveAllIterations = false)
+void DrawEdgesAndSave(BMP& canvas, const char* filename, const bool saveAllIterations = false)
 {
-  output.SetSize(source.TellWidth(), source.TellHeight());
-
   int iterations = 0;
   for (const auto i : edges)
   {
-    output.SetPixel(i.first, i.second, colour_visited);
+    canvas.SetPixel(i.first, i.second, colour_visited);
 
     if (saveAllIterations == true)
     {
       char numbuff[16] = {0};
       _itoa_s(iterations, numbuff, 10);
       strcat_s(numbuff, 16, ".bmp");
-      output.WriteToFile(numbuff);
+      canvas.WriteToFile(numbuff);
     }
     ++iterations;
   }
 
-  output.WriteToFile(kOutputName);
+  canvas.WriteToFile(filename);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -249,6 +247,8 @@ void SetFirstBlackPixel(StartingSet& set)
 void main()
 {
   source.ReadFromFile(kSourceName);
+  
+  BMP source_copy = source;
 
   for (auto startingset : startingSets)
   {
@@ -266,16 +266,18 @@ void main()
     {
       edges.push_back(make_pair(p->x, p->y));
       source.SetPixel(p->x, p->y, colour_visited);
-    } while (GetNextPoint(*mask) == true);
+    } 
+    while (GetNextPoint(*mask) == true);
 
     delete mask;
     delete p;
   }
 
-  //DrawEdgeToOutputAndSave(true);
-  DrawEdgesToOutputAndSave(false);
+  BMP output;
+  output.SetSize(source.TellWidth(), source.TellHeight());
+  DrawEdgesAndSave(output, kOutputName);
 
-  source.WriteToFile(kCompositeName);
+  DrawEdgesAndSave(source_copy, kCompositeName, true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
