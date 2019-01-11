@@ -154,6 +154,7 @@
     <ClInclude Include="bmp\EasyBMP_BMP.h" />
     <ClInclude Include="bmp\EasyBMP_DataStructures.h" />
     <ClInclude Include="bmp\EasyBMP_VariousBMPutilities.h" />
+    <ClInclude Include="Definitions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

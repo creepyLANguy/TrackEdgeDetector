@@ -26,3 +26,17 @@
 *.exe
 *.out
 *.app
+
+TrackEdgeDetector/\.vs/
+
+TrackEdgeDetector/TrackEdgeDetector/x64/
+
+TrackEdgeDetector/x64/
+
+TrackEdgeDetector/Debug/
+
+TrackEdgeDetector/Release/
+
+TrackEdgeDetector/TrackEdgeDetector/Debug/
+
+TrackEdgeDetector/TrackEdgeDetector/Release/
