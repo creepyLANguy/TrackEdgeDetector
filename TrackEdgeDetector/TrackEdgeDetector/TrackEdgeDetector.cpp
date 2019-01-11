@@ -6,27 +6,22 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int start_x_p1 = 423;
-const int start_y_p1 = 38;
-
-const int start_x_p2 = start_x_p1;
-const int start_y_p2 = 37;
-
-int currentDirectionShifterIndex = W;
+vector<StartingSet> startingSets =
+{
+  //StartingSet(Pixel(360, 38), Pixel(360, 37), W),
+  StartingSet(Pixel(375, 43), Pixel(375, 42), W),
+  StartingSet(Pixel(260, 119), Pixel(260, 120), E)
+};
 
 const RGBApixel colour_visited = { 0, 0, 255, 0 }; //struct order is BGRA for some reason :/
 
 const char* kSourceName = "source.bmp";
 const char* kOutputName = "edges.bmp";
+const char* kCompositeName = "composite.bmp";
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//mask on the first legitimate edge.
-Mask mask = 
-{ 
-  Pixel(start_x_p1, start_y_p1),
-  Pixel(start_x_p2, start_y_p2)
-};
+Mask* mask = nullptr;
 
 //Store all edge points that we find in here.
 vector<pair<int, int>> edges;
@@ -34,6 +29,8 @@ vector<pair<int, int>> edges;
 BMP source, output;
 
 Pixel* p = nullptr;
+
+Direction currentDirection;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -86,35 +83,35 @@ bool ReorientMask(Mask& temp_mask)
 {
   bool isShiftedOnWhite = false;
 
-  if (currentDirectionShifterIndex == N)
+  if (currentDirection == N)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == S)
+  else if (currentDirection == S)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == E)
+  else if (currentDirection == E)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == W)
+  else if (currentDirection == W)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == NE)
+  else if (currentDirection == NE)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == SE)
+  else if (currentDirection == SE)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == NW)
+  else if (currentDirection == NW)
   {
     isShiftedOnWhite = true;
   }
-  else if (currentDirectionShifterIndex == SW)
+  else if (currentDirection == SW)
   {
     isShiftedOnWhite = true;
   }
@@ -124,24 +121,22 @@ bool ReorientMask(Mask& temp_mask)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool DoCheck(Mask& mask_temp, const int& index)
+bool DoCheck(Mask& mask_temp)
 {
   const RGBApixel temp_1 = source.GetPixel(mask_temp.p1.x, mask_temp.p1.y);
   const RGBApixel temp_2 = source.GetPixel(mask_temp.p2.x, mask_temp.p2.y);
 
   if (IsValidSample(temp_1, temp_2))
   {
-    currentDirectionShifterIndex = index;
-
-    mask = mask_temp;
+    *mask = mask_temp;
 
     if ((temp_1.Red + temp_1.Blue + temp_1.Green) == BLACK)
     {
-      *p = mask.p1;
+      *p = mask->p1;
     }
     else
     {
-      *p = mask.p2;
+      *p = mask->p2;
     }
 
     return true;
@@ -152,15 +147,15 @@ bool DoCheck(Mask& mask_temp, const int& index)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetEdge()
+bool GetEdge(Mask& mask)
 {
-  int index = currentDirectionShifterIndex;
+  Direction index = currentDirection;
 
   for (int iterCount = 0; iterCount < LAST; ++iterCount)
   {
     if (index == LAST)
     {
-      index = 0;
+      index = FIRST;
     }
 
     Mask mask_temp = mask;
@@ -171,12 +166,13 @@ bool GetEdge()
     mask_temp.p2.x += d.x;
     mask_temp.p2.y += d.y;
 
-    if (DoCheck(mask_temp, index) == true)
+    if (DoCheck(mask_temp) == true)
     {
+      currentDirection = index;
       return true;
     }
 
-    ++index;
+    index = static_cast<Direction>(static_cast<int>(index) + 1);
   }
 
   return false;
@@ -184,9 +180,9 @@ bool GetEdge()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetNextPoint()
+bool GetNextPoint(Mask mask)
 {
-  const bool hasFoundEdge = GetEdge();
+  const bool hasFoundEdge = GetEdge(mask);
   if (hasFoundEdge == false)
   {
     Mask mask_temp = mask;
@@ -197,13 +193,13 @@ bool GetNextPoint()
     if (isShiftedOnWhite == true)
     {
       //If we shift on white, we should check the new pos as it hits a single black. 
-      if (DoCheck(mask_temp, currentDirectionShifterIndex) == true)
+      if (DoCheck(mask_temp) == true)
       {
         return true;
       }
     }
 
-    return GetEdge();
+    return GetEdge(mask);
   }
   
   return hasFoundEdge;
@@ -211,7 +207,7 @@ bool GetNextPoint()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void DrawEdgeToOutputAndSave(const bool saveAllIterations = false)
+void DrawEdgesToOutputAndSave(const bool saveAllIterations = false)
 {
   output.SetSize(source.TellWidth(), source.TellHeight());
 
@@ -235,16 +231,16 @@ void DrawEdgeToOutputAndSave(const bool saveAllIterations = false)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SetFirstBlackPixel()
+void SetFirstBlackPixel(StartingSet& set)
 {
-  const RGBApixel sample = source.GetPixel(start_x_p1, start_y_p1);
+  const RGBApixel sample = source.GetPixel(set.p1.x, set.p1.y);
   if ((sample.Red + sample.Green + sample.Blue) == BLACK)
   {
-    p = new Pixel(start_x_p1, start_y_p1);
+    p = new Pixel(set.p1.x, set.p1.y);
   }
   else
   {
-    p = new Pixel(start_x_p2, start_y_p2);
+    p = new Pixel(set.p2.x, set.p2.y);
   }  
 }
 
@@ -254,18 +250,32 @@ void main()
 {
   source.ReadFromFile(kSourceName);
 
-  SetFirstBlackPixel();
-
-  do
+  for (auto startingset : startingSets)
   {
-    edges.push_back(make_pair(p->x, p->y));
-    source.SetPixel(p->x, p->y, colour_visited);
-  } 
-  while (GetNextPoint() == true);
-  
-  DrawEdgeToOutputAndSave(true);
+    mask = new Mask
+    (
+      Pixel(startingset.p1.x, startingset.p1.y), 
+      Pixel(startingset.p2.x, startingset.p2.y)
+    );
 
-  delete p;
+    SetFirstBlackPixel(startingset);
+
+    currentDirection = startingset.direction;
+
+    do
+    {
+      edges.push_back(make_pair(p->x, p->y));
+      source.SetPixel(p->x, p->y, colour_visited);
+    } while (GetNextPoint(*mask) == true);
+
+    delete mask;
+    delete p;
+  }
+
+  //DrawEdgeToOutputAndSave(true);
+  DrawEdgesToOutputAndSave(false);
+
+  source.WriteToFile(kCompositeName);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
