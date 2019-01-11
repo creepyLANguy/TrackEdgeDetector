@@ -15,7 +15,7 @@ vector<StartingSet> startingSets =
 
 const RGBApixel colour_visited = { 0, 0, 255, 0 }; //struct order is BGRA for some reason :/
 
-const char* kSourceName = "source.bmp";
+const char* kSourceName = "source_simple.bmp";
 const char* kOutputName = "edges.bmp";
 const char* kCompositeName = "composite.bmp";
 
