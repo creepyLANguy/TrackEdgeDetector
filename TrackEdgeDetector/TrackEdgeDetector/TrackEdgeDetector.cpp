@@ -1,8 +1,10 @@
 #include "bmp/EasyBMP.h"
 #include "Definitions.h"
+#include <string>
 #include <vector>
 
-using namespace std;
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -13,11 +15,13 @@ vector<StartingSet> startingSets =
   StartingSet(Pixel(260, 119), Pixel(260, 120), E)
 };
 
-const RGBApixel colour_visited = { 0, 0, 255, 0 }; //struct order is BGRA for some reason :/
+//struct order is BGRA for some reason :/
+const RGBApixel colour_visited = { 0, 0, 255, 0 }; 
 
 const char* kSourceName = "source_simple.bmp";
 const char* kOutputName = "edges.bmp";
 const char* kCompositeName = "composite.bmp";
+const string kFolderName = to_string(GetTickCount());
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -79,58 +83,36 @@ bool IsValidSample(const RGBApixel& p1, const RGBApixel& p2)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool ReorientMask(Mask& temp_mask)
-{
-  bool isShiftedOnWhite = false;
+int GetRelativePositionIndex(const Pixel& origin, const Pixel& slave)
+{  
+  const int diff_x = origin.x - slave.x;
+  const int diff_y = origin.y - slave.y;
 
-  if (currentDirection == N)
+  for (int i = 0; i < 4; ++i)
   {
-    isShiftedOnWhite = true;
+    if  (
+        (relativePosHelper[i].x == diff_x) && 
+        (relativePosHelper[i].y == diff_y)
+        )
+    {
+      return i;
+    }
   }
-  else if (currentDirection == S)
-  {
-    isShiftedOnWhite = true;
-  }
-  else if (currentDirection == E)
-  {
-    isShiftedOnWhite = true;
-  }
-  else if (currentDirection == W)
-  {
-    isShiftedOnWhite = true;
-  }
-  else if (currentDirection == NE)
-  {
-    isShiftedOnWhite = true;
-  }
-  else if (currentDirection == SE)
-  {
-    isShiftedOnWhite = true;
-  }
-  else if (currentDirection == NW)
-  {
-    isShiftedOnWhite = true;
-  }
-  else if (currentDirection == SW)
-  {
-    isShiftedOnWhite = true;
-  }
-
-  return isShiftedOnWhite;
+  return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 bool DoCheck(Mask& mask_temp)
 {
-  const RGBApixel temp_1 = source.GetPixel(mask_temp.p1.x, mask_temp.p1.y);
-  const RGBApixel temp_2 = source.GetPixel(mask_temp.p2.x, mask_temp.p2.y);
+  const RGBApixel p1 = source.GetPixel(mask_temp.p1.x, mask_temp.p1.y);
+  const RGBApixel p2 = source.GetPixel(mask_temp.p2.x, mask_temp.p2.y);
 
-  if (IsValidSample(temp_1, temp_2))
+  if (IsValidSample(p1, p2))
   {
     *mask = mask_temp;
 
-    if ((temp_1.Red + temp_1.Blue + temp_1.Green) == BLACK)
+    if ((p1.Red + p1.Blue + p1.Green) == BLACK)
     {
       *p = mask->p1;
     }
@@ -147,7 +129,7 @@ bool DoCheck(Mask& mask_temp)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetEdge(Mask& mask)
+bool GetValidEdge(Mask& mask)
 {
   Direction index = currentDirection;
 
@@ -180,35 +162,67 @@ bool GetEdge(Mask& mask)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetNextPoint(Mask mask)
+bool TryFindEdgeWithNewMask(Mask& mask)
 {
-  const bool hasFoundEdge = GetEdge(mask);
-  if (hasFoundEdge == false)
+  const int relativePosIndex = GetRelativePositionIndex(mask.p1, mask.p2);
+
+  //for (auto r : rotatormasks)
+  for (int i = 0; i < 2; ++i)
   {
-    Mask mask_temp = mask;
+    //const Rotator rotator = r[relativePosIndex];
+    const Rotator rotator = rotatormasks[i][relativePosIndex];
 
-    //Seems we need to filp the orientation of the mask. 
-    const bool isShiftedOnWhite = ReorientMask(mask_temp);
+    mask.p2.x += rotator.x;
+    mask.p2.y += rotator.y;
 
-    if (isShiftedOnWhite == true)
+    //We may have landed on a vald edge by simply rotating
+    if (DoCheck(mask) == true)
     {
-      //If we shift on white, we should check the new pos as it hits a single black. 
-      if (DoCheck(mask_temp) == true)
-      {
-        return true;
-      }
+      return true;
     }
 
-    return GetEdge(mask);
+    if (GetValidEdge(mask) == true)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool GetNextPoint(Mask& mask)
+{
+  if (GetValidEdge(mask) == true)
+  {
+    return true;
+  }
+
+  //No valid edges found for current mask.
+
+  vector<Mask> tempMasks =
+  {
+    Mask(Pixel(mask.p1.x, mask.p1.y), Pixel(mask.p2.x, mask.p2.y)),
+    Mask(Pixel(mask.p2.x, mask.p2.y), Pixel(mask.p1.x, mask.p1.y))
+  };
+  for (auto m : tempMasks)
+  {
+    if (TryFindEdgeWithNewMask(m) == true)
+    {
+      return true;
+    }
   }
   
-  return hasFoundEdge;
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 void DrawEdgesAndSave(BMP& canvas, const char* filename, const bool saveAllIterations = false)
 {
+  string fullPath = kFolderName + "/" + filename;
+
   int iterations = 0;
   for (const auto i : edges)
   {
@@ -216,15 +230,13 @@ void DrawEdgesAndSave(BMP& canvas, const char* filename, const bool saveAllItera
 
     if (saveAllIterations == true)
     {
-      char numbuff[16] = {0};
-      _itoa_s(iterations, numbuff, 10);
-      strcat_s(numbuff, 16, ".bmp");
-      canvas.WriteToFile(numbuff);
+      string path_bmp = kFolderName + "/" + to_string(iterations) + ".bmp";
+      canvas.WriteToFile(path_bmp.c_str());
     }
     ++iterations;
   }
 
-  canvas.WriteToFile(filename);
+  canvas.WriteToFile(fullPath.c_str());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,7 +257,9 @@ void SetFirstBlackPixel(StartingSet& set)
 ///////////////////////////////////////////////////////////////////////////////
 
 void main()
-{
+{  
+  CreateDirectoryA(kFolderName.c_str(), nullptr);
+
   source.ReadFromFile(kSourceName);
   
   BMP source_copy = source;
@@ -273,11 +287,13 @@ void main()
     delete p;
   }
 
+
   BMP output;
   output.SetSize(source.TellWidth(), source.TellHeight());
-  DrawEdgesAndSave(output, kOutputName);
+  DrawEdgesAndSave(output, kOutputName, false);
 
-  DrawEdgesAndSave(source_copy, kCompositeName, true);
+
+  DrawEdgesAndSave(source_copy, kCompositeName, false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

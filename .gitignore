@@ -40,3 +40,9 @@ TrackEdgeDetector/Release/
 TrackEdgeDetector/TrackEdgeDetector/Debug/
 
 TrackEdgeDetector/TrackEdgeDetector/Release/
+
+*.db
+
+*.opendb
+
+TrackEdgeDetector/TrackEdgeDetector/edges\.bmp

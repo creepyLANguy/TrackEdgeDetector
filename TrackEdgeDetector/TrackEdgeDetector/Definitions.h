@@ -1,6 +1,8 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
+using namespace std;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 inline bool operator==(const RGBApixel& lhs, const RGBApixel& rhs)
@@ -18,14 +20,14 @@ const int BLACK = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct Pixel
+typedef struct Pixel
 {
   Pixel(const int& x, const int& y)
   : x(x), y(y)
   {}
 
   int x, y;
-};
+} DirectionShifter, Rotator;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,15 +41,6 @@ struct Mask
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-
-struct DirectionShifter
-{
-  DirectionShifter(const int& x, const int& y)
-  : x(x), y(y)
-  {}
-
-  int x, y;
-};
 
 enum Direction
 {
@@ -86,6 +79,48 @@ struct StartingSet
 
   Pixel p1, p2;
   Direction direction;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+struct Rotator
+{
+  Rotator(const int& x, const int& y)
+    : x(x), y(y)
+  {}
+
+  int x, y;
+};
+*/
+
+const Rotator rotationmask_clockwise[4] = 
+{
+  Rotator(+1, +1), //Upper->Right
+  Rotator(-1, +1), //Right->Bottom
+  Rotator(-1, -1), //Bottom->Left
+  Rotator(+1, -1)  //Left->Upper
+};
+
+const Rotator rotationmask_counterclockwise[4] =
+{
+  Rotator(-1, +1), //Upper->Left
+  Rotator(+1, +1), //Right->Upper
+  Rotator(+1, -1), //Bottom->Right
+  Rotator(-1, -1)  //Left->Bottom
+};
+
+//const vector<Rotator*> rotatormasks = { rotationmask_clockwise, rotationmask_counterclockwise };
+const Rotator* rotatormasks[2] = { rotationmask_clockwise, rotationmask_counterclockwise };
+
+///////////////////////////////////////////////////////////////////////////////
+
+const Pixel relativePosHelper[4] = 
+{
+  Pixel(0,-1), //Upper
+  Pixel(+1,0), //Right
+  Pixel(0,+1), //Bottom
+  Pixel(-1,0), //Left
 };
 
 ///////////////////////////////////////////////////////////////////////////////
