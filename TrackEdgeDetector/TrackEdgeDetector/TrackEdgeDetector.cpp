@@ -9,19 +9,33 @@
 
 vector<StartingSet> startingSets =
 {
-  //StartingSet(Pixel(375, 43), Pixel(375, 42), W),
-  StartingSet(Pixel(440, 69), Pixel(440, 70), E),
-  StartingSet(Pixel(641, 141), Pixel(641, 140), E)
-};
+  //source_simple.bmp
+  //StartingSet(Pixel(375, 43), Pixel(375, 42), W), 
+  
+  //source.bmp
+  StartingSet(Pixel(440, 69), Pixel(440, 70), E), 
+  StartingSet(Pixel(641, 141), Pixel(641, 140), E) 
+  
+  //suzuka_full.bmp
+  //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), 
+  //StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E) 
 
-//struct order is BGRA for some reason :/
-const RGBApixel colour_visited = { 255, 200, 0, 0 }; 
+  //suzuka_src_fiftypercent.bmp
+  //StartingSet(Pixel(1505, 7773), Pixel(1505, 7772), W), 
+  //StartingSet(Pixel(1612, 7867), Pixel(1612, 7868), W), 
+};
 
 //const char* kSourceName = "source_simple.bmp";
 const char* kSourceName = "source.bmp";
+//const char* kSourceName = "suzuka_full.bmp";
+//const char* kSourceName = "suzuka_src_fiftypercent.bmp";
+
 const char* kOutputName = "edges.bmp";
 const char* kCompositeName = "composite.bmp";
 const string kFolderName = to_string(GetTickCount());
+
+//struct order is BGRA for some reason :/
+const RGBApixel colour_visited = { 255, 200, 0, 0 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -32,9 +46,9 @@ vector<pair<int, int>> edges;
 
 BMP source;
 
-Pixel* p = nullptr;
+Pixel* pixel_global = nullptr;
 
-Direction currentDirection;
+Direction currentDirection_global;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -112,15 +126,10 @@ bool DoCheck(Mask& mask_temp)
   {
     *mask_global = mask_temp;
 
-    if ((p1.Red + p1.Blue + p1.Green) == BLACK)
-    {
-      *p = mask_global->p1;
-    }
-    else
-    {
-      *p = mask_global->p2;
-    }
-
+    p1.Red + p1.Blue + p1.Green == BLACK 
+    ? *pixel_global = mask_global->p1 
+    : *pixel_global = mask_global->p2;
+    
     return true;
   }
 
@@ -131,7 +140,7 @@ bool DoCheck(Mask& mask_temp)
 
 bool GetValidEdge(Mask& mask)
 {
-  Direction index = currentDirection;
+  Direction index = currentDirection_global;
 
   for (int iterCount = 0; iterCount < LAST; ++iterCount)
   {
@@ -150,7 +159,7 @@ bool GetValidEdge(Mask& mask)
 
     if (DoCheck(mask_temp) == true)
     {
-      currentDirection = index;
+      currentDirection_global = index;
       return true;
     }
 
@@ -168,7 +177,7 @@ bool TryFindEdgeWithNewMask(Mask& mask)
 
   //AL.
   //I'm commenting this out cos this condition should never be reached. 
-  //HOWEVER, is buggy stuffs starts happening, add this check back in.
+  //HOWEVER, if buggy stuffs starts happening, add this check back in.
   /*
   if (relativePosIndex < 0)
   {
@@ -225,7 +234,6 @@ bool GetNextPoint(Mask& mask)
   }
 
   //No valid edges found for current mask.
-
   return TryAndGetAValidEdgeWithAllOtherMasksAndRotations(mask);
 
 }
@@ -257,14 +265,10 @@ void DrawEdgesAndSave(BMP& canvas, const char* filename, const bool saveAllItera
 void SetFirstBlackPixel(StartingSet& set)
 {
   const RGBApixel sample = source.GetPixel(set.p1.x, set.p1.y);
-  if ((sample.Red + sample.Green + sample.Blue) == BLACK)
-  {
-    p = new Pixel(set.p1.x, set.p1.y);
-  }
-  else
-  {
-    p = new Pixel(set.p2.x, set.p2.y);
-  }  
+  
+  sample.Red + sample.Green + sample.Blue == BLACK 
+  ? pixel_global = new Pixel(set.p1.x, set.p1.y) 
+  : pixel_global = new Pixel(set.p2.x, set.p2.y);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -287,17 +291,17 @@ void main()
 
     SetFirstBlackPixel(startingset);
 
-    currentDirection = startingset.direction;
+    currentDirection_global = startingset.direction;
 
     do
     {
-      edges.push_back(make_pair(p->x, p->y));
-      source.SetPixel(p->x, p->y, colour_visited);
+      edges.push_back(make_pair(pixel_global->x, pixel_global->y));
+      source.SetPixel(pixel_global->x, pixel_global->y, colour_visited);
     } 
     while (GetNextPoint(*mask_global) == true);
 
     delete mask_global;
-    delete p;
+    delete pixel_global;
   }
 
 
