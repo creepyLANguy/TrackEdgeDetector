@@ -1,5 +1,6 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
+#include <vector>
 
 using namespace std;
 
@@ -20,14 +21,14 @@ const int BLACK = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef struct Pixel
+typedef struct Generic_XY_Pair
 {
-  Pixel(const int& x, const int& y)
+  Generic_XY_Pair(const int& x, const int& y)
   : x(x), y(y)
   {}
 
   int x, y;
-} DirectionShifter, Rotator;
+} Pixel, DirectionShifter, Rotator;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -83,18 +84,7 @@ struct StartingSet
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/*
-struct Rotator
-{
-  Rotator(const int& x, const int& y)
-    : x(x), y(y)
-  {}
-
-  int x, y;
-};
-*/
-
-const Rotator rotationmask_clockwise[4] = 
+const vector<Rotator> rotationmask_clockwise = 
 {
   Rotator(+1, +1), //Upper->Right
   Rotator(-1, +1), //Right->Bottom
@@ -102,20 +92,19 @@ const Rotator rotationmask_clockwise[4] =
   Rotator(+1, -1)  //Left->Upper
 };
 
-const Rotator rotationmask_counterclockwise[4] =
+const vector<Rotator> rotationmask_counterclockwise =
 {
   Rotator(-1, +1), //Upper->Left
-  Rotator(+1, +1), //Right->Upper
+  Rotator(-1, -1), //Right->Upper
   Rotator(+1, -1), //Bottom->Right
-  Rotator(-1, -1)  //Left->Bottom
+  Rotator(+1, +1)  //Left->Bottom
 };
 
-//const vector<Rotator*> rotatormasks = { rotationmask_clockwise, rotationmask_counterclockwise };
-const Rotator* rotatormasks[2] = { rotationmask_clockwise, rotationmask_counterclockwise };
+const vector<vector<Rotator>> rotatormasks = { rotationmask_clockwise, rotationmask_counterclockwise };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const Pixel relativePosHelper[4] = 
+const vector<Pixel> relativePosHelper = 
 {
   Pixel(0,-1), //Upper
   Pixel(+1,0), //Right

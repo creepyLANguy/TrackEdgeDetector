@@ -1,7 +1,6 @@
 #include "bmp/EasyBMP.h"
 #include "Definitions.h"
 #include <string>
-#include <vector>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -10,22 +9,23 @@
 
 vector<StartingSet> startingSets =
 {
-  //StartingSet(Pixel(360, 38), Pixel(360, 37), W),
-  StartingSet(Pixel(375, 43), Pixel(375, 42), W),
-  StartingSet(Pixel(260, 119), Pixel(260, 120), E)
+  //StartingSet(Pixel(375, 43), Pixel(375, 42), W),
+  StartingSet(Pixel(440, 69), Pixel(440, 70), E),
+  StartingSet(Pixel(641, 141), Pixel(641, 140), E)
 };
 
 //struct order is BGRA for some reason :/
-const RGBApixel colour_visited = { 0, 0, 255, 0 }; 
+const RGBApixel colour_visited = { 255, 200, 0, 0 }; 
 
-const char* kSourceName = "source_simple.bmp";
+//const char* kSourceName = "source_simple.bmp";
+const char* kSourceName = "source.bmp";
 const char* kOutputName = "edges.bmp";
 const char* kCompositeName = "composite.bmp";
 const string kFolderName = to_string(GetTickCount());
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Mask* mask = nullptr;
+Mask* mask_global = nullptr;
 
 //Store all edge points that we find in here.
 vector<pair<int, int>> edges;
@@ -85,8 +85,8 @@ bool IsValidSample(const RGBApixel& p1, const RGBApixel& p2)
 
 int GetRelativePositionIndex(const Pixel& origin, const Pixel& slave)
 {  
-  const int diff_x = origin.x - slave.x;
-  const int diff_y = origin.y - slave.y;
+  const int diff_x = slave.x - origin.x;
+  const int diff_y = slave.y - origin.y;
 
   for (int i = 0; i < 4; ++i)
   {
@@ -110,15 +110,15 @@ bool DoCheck(Mask& mask_temp)
 
   if (IsValidSample(p1, p2))
   {
-    *mask = mask_temp;
+    *mask_global = mask_temp;
 
     if ((p1.Red + p1.Blue + p1.Green) == BLACK)
     {
-      *p = mask->p1;
+      *p = mask_global->p1;
     }
     else
     {
-      *p = mask->p2;
+      *p = mask_global->p2;
     }
 
     return true;
@@ -166,16 +166,22 @@ bool TryFindEdgeWithNewMask(Mask& mask)
 {
   const int relativePosIndex = GetRelativePositionIndex(mask.p1, mask.p2);
 
-  //for (auto r : rotatormasks)
-  for (int i = 0; i < 2; ++i)
+  //AL.
+  //I'm commenting this out cos this condition should never be reached. 
+  //HOWEVER, is buggy stuffs starts happening, add this check back in.
+  /*
+  if (relativePosIndex < 0)
   {
-    //const Rotator rotator = r[relativePosIndex];
-    const Rotator rotator = rotatormasks[i][relativePosIndex];
+    return false;
+  }
+  */
 
-    mask.p2.x += rotator.x;
-    mask.p2.y += rotator.y;
+  for (auto r : rotatormasks)
+  {
+    mask.p2.x = mask.p2.x + r[relativePosIndex].x;
+    mask.p2.y = mask.p2.y + r[relativePosIndex].y;
 
-    //We may have landed on a vald edge by simply rotating
+    //We may have landed on a vald edge by simply rotating! :)
     if (DoCheck(mask) == true)
     {
       return true;
@@ -192,15 +198,8 @@ bool TryFindEdgeWithNewMask(Mask& mask)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetNextPoint(Mask& mask)
+bool TryAndGetAValidEdgeWithAllOtherMasksAndRotations(Mask& mask)
 {
-  if (GetValidEdge(mask) == true)
-  {
-    return true;
-  }
-
-  //No valid edges found for current mask.
-
   vector<Mask> tempMasks =
   {
     Mask(Pixel(mask.p1.x, mask.p1.y), Pixel(mask.p2.x, mask.p2.y)),
@@ -213,8 +212,22 @@ bool GetNextPoint(Mask& mask)
       return true;
     }
   }
-  
   return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool GetNextPoint(Mask& mask)
+{
+  if (GetValidEdge(mask) == true)
+  {
+    return true;
+  }
+
+  //No valid edges found for current mask.
+
+  return TryAndGetAValidEdgeWithAllOtherMasksAndRotations(mask);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -266,7 +279,7 @@ void main()
 
   for (auto startingset : startingSets)
   {
-    mask = new Mask
+    mask_global = new Mask
     (
       Pixel(startingset.p1.x, startingset.p1.y), 
       Pixel(startingset.p2.x, startingset.p2.y)
@@ -281,9 +294,9 @@ void main()
       edges.push_back(make_pair(p->x, p->y));
       source.SetPixel(p->x, p->y, colour_visited);
     } 
-    while (GetNextPoint(*mask) == true);
+    while (GetNextPoint(*mask_global) == true);
 
-    delete mask;
+    delete mask_global;
     delete p;
   }
 
@@ -297,3 +310,4 @@ void main()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
