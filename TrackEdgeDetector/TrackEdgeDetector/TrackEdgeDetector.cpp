@@ -295,7 +295,7 @@ void main()
 
     do
     {
-      edges.push_back(make_pair(pixel_global->x, pixel_global->y));
+      edges.emplace_back(pixel_global->x, pixel_global->y);
       source.SetPixel(pixel_global->x, pixel_global->y, colour_visited);
     } 
     while (GetNextPoint(*mask_global) == true);
