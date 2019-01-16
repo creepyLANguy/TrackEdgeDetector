@@ -13,29 +13,26 @@ vector<StartingSet> startingSets =
   //StartingSet(Pixel(375, 43), Pixel(375, 42), W), 
   
   //source.bmp
-  StartingSet(Pixel(440, 69), Pixel(440, 70), E), 
-  StartingSet(Pixel(641, 141), Pixel(641, 140), E) 
+  StartingSet(Pixel(440, 69), Pixel(440, 70), E), StartingSet(Pixel(665, 152), Pixel(665, 151), E) 
   
-  //suzuka_full.bmp
-  //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), 
-  //StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E) 
-
   //suzuka_src_fiftypercent.bmp
-  //StartingSet(Pixel(1505, 7773), Pixel(1505, 7772), W), 
-  //StartingSet(Pixel(1612, 7867), Pixel(1612, 7868), W), 
+  //StartingSet(Pixel(1505, 7773), Pixel(1505, 7772), W), StartingSet(Pixel(1612, 7867), Pixel(1612, 7868), W), StartingSet(Pixel(3089, 3430), Pixel(3089, 3429), W),
+
+  //suzuka_full.bmp
+  //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E)
 };
 
 //const char* kSourceName = "source_simple.bmp";
-const char* kSourceName = "source.bmp";
-//const char* kSourceName = "suzuka_full.bmp";
+//const char* kSourceName = "source2.bmp";
 //const char* kSourceName = "suzuka_src_fiftypercent.bmp";
+const char* kSourceName = "suzuka_full.bmp";
 
 const char* kOutputName = "edges.bmp";
 const char* kCompositeName = "composite.bmp";
 const string kFolderName = to_string(GetTickCount());
 
 //struct order is BGRA for some reason :/
-const RGBApixel colour_visited = { 255, 200, 0, 0 };
+const RGBApixel colour_visited = { 0, 0, 255, 0 }; //red
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -52,13 +49,6 @@ Direction currentDirection_global;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline bool IsBlack(const RGBApixel& p)
-{
-  return (p.Red + p.Green + p.Blue + p.Alpha) == BLACK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 bool IsValidSample(const RGBApixel& p1, const RGBApixel& p2)
 {
   if ((p1 == colour_visited) || (p2 == colour_visited))
@@ -69,7 +59,7 @@ bool IsValidSample(const RGBApixel& p1, const RGBApixel& p2)
   int found_black = 0;
   int found_non_black = 0;
 
-  if (IsBlack(p1) == true)
+  if (p1 == blackPixel)
   {
     ++found_black;
   }
@@ -78,7 +68,7 @@ bool IsValidSample(const RGBApixel& p1, const RGBApixel& p2)
     ++found_non_black;
   }
 
-  if (IsBlack(p2) == true)
+  if (p2 == blackPixel)
   {
     ++found_black;
   }
@@ -126,7 +116,7 @@ bool DoCheck(Mask& mask_temp)
   {
     *mask_global = mask_temp;
 
-    p1.Red + p1.Blue + p1.Green == BLACK 
+    p1 == blackPixel 
     ? *pixel_global = mask_global->p1 
     : *pixel_global = mask_global->p2;
     
@@ -235,19 +225,24 @@ bool GetNextPoint(Mask& mask)
 
   //No valid edges found for current mask.
   return TryAndGetAValidEdgeWithAllOtherMasksAndRotations(mask);
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void DrawEdgesAndSave(BMP& canvas, const char* filename, const bool saveAllIterations = false)
+void DrawEdgesAndSave
+(
+  BMP& canvas, 
+  const char* filename, 
+  const bool saveAllIterations = false,
+  const RGBApixel& colourconst = blackPixel
+)
 {
   string fullPath = kFolderName + "/" + filename;
 
   int iterations = 0;
   for (const auto i : edges)
   {
-    canvas.SetPixel(i.first, i.second, colour_visited);
+    canvas.SetPixel(i.first, i.second, colourconst);
 
     if (saveAllIterations == true)
     {
@@ -266,7 +261,7 @@ void SetFirstBlackPixel(StartingSet& set)
 {
   const RGBApixel sample = source.GetPixel(set.p1.x, set.p1.y);
   
-  sample.Red + sample.Green + sample.Blue == BLACK 
+  sample == blackPixel 
   ? pixel_global = new Pixel(set.p1.x, set.p1.y) 
   : pixel_global = new Pixel(set.p2.x, set.p2.y);
 }
@@ -304,13 +299,11 @@ void main()
     delete pixel_global;
   }
 
-
   BMP output;
   output.SetSize(source.TellWidth(), source.TellHeight());
   DrawEdgesAndSave(output, kOutputName, false);
 
-
-  DrawEdgesAndSave(source_copy, kCompositeName, false);
+  DrawEdgesAndSave(source_copy, kCompositeName, false, colour_visited);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
