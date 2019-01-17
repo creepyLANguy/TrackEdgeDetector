@@ -11,10 +11,10 @@
 vector<StartingSet> startingSets =
 {
   //source_simple.bmp
-  //StartingSet(Pixel(375, 43), Pixel(375, 42), W), 
+  StartingSet(Pixel(260, 38), Pixel(260, 37), W), StartingSet(Pixel(260, 41), Pixel(260, 42), W), 
   
   //source.bmp
-  StartingSet(Pixel(440, 69), Pixel(440, 70), E), StartingSet(Pixel(665, 152), Pixel(665, 151), E) 
+  //StartingSet(Pixel(440, 69), Pixel(440, 70), E), StartingSet(Pixel(665, 152), Pixel(665, 151), E) 
   
   //suzuka_src_fiftypercent.bmp
   //StartingSet(Pixel(1505, 7773), Pixel(1505, 7772), W), StartingSet(Pixel(1612, 7867), Pixel(1612, 7868), W), StartingSet(Pixel(3089, 3430), Pixel(3089, 3429), W),
@@ -23,29 +23,29 @@ vector<StartingSet> startingSets =
   //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E)
 };
 
-//const char* kSourceName = "source_simple.bmp";
-const char* kSourceName = "source.bmp";
+const char* kSourceName = "source_simple.bmp";
+//const char* kSourceName = "source.bmp";
 //const char* kSourceName = "suzuka_src_fiftypercent.bmp";
 //const char* kSourceName = "suzuka_full.bmp";
 
-const char* kOutputName = "edges.bmp";
-const char* kCompositeName = "composite.bmp";
-const string kFolderName = to_string(GetTickCount());
+const char* kOutputName     = "edges.bmp";
+const char* kCompositeName  = "composite.bmp";
+const string kFolderName    = to_string(GetTickCount());
 
 //struct order is BGRA for some reason :/
 const RGBApixel colour_visited = { 0, 0, 255, 0 }; //red
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Mask* mask_global = nullptr;
-
 vector<vector<pair<int, int>>> edges_collection;
 
 BMP source;
 
+Direction currentDirection_global;
+
 Pixel* pixel_global = nullptr;
 
-Direction currentDirection_global;
+Mask* mask_global = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
