@@ -1,6 +1,7 @@
 #include "bmp/EasyBMP.h"
 #include "Definitions.h"
 #include <string>
+#include <fstream>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -23,9 +24,9 @@ vector<StartingSet> startingSets =
 };
 
 //const char* kSourceName = "source_simple.bmp";
-//const char* kSourceName = "source2.bmp";
+const char* kSourceName = "source.bmp";
 //const char* kSourceName = "suzuka_src_fiftypercent.bmp";
-const char* kSourceName = "suzuka_full.bmp";
+//const char* kSourceName = "suzuka_full.bmp";
 
 const char* kOutputName = "edges.bmp";
 const char* kCompositeName = "composite.bmp";
@@ -38,8 +39,7 @@ const RGBApixel colour_visited = { 0, 0, 255, 0 }; //red
 
 Mask* mask_global = nullptr;
 
-//Store all edge points that we find in here.
-vector<pair<int, int>> edges;
+vector<vector<pair<int, int>>> edges_collection;
 
 BMP source;
 
@@ -240,16 +240,19 @@ void DrawEdgesAndSave
   string fullPath = kFolderName + "/" + filename;
 
   int iterations = 0;
-  for (const auto i : edges)
+  for (auto edges : edges_collection)
   {
-    canvas.SetPixel(i.first, i.second, colourconst);
-
-    if (saveAllIterations == true)
+    for (const auto i : edges)
     {
-      string path_bmp = kFolderName + "/" + to_string(iterations) + ".bmp";
-      canvas.WriteToFile(path_bmp.c_str());
+      canvas.SetPixel(i.first, i.second, colourconst);
+
+      if (saveAllIterations == true)
+      {
+        string path_bmp = kFolderName + "/" + to_string(iterations) + ".bmp";
+        canvas.WriteToFile(path_bmp.c_str());
+      }
+      ++iterations;
     }
-    ++iterations;
   }
 
   canvas.WriteToFile(fullPath.c_str());
@@ -268,14 +271,46 @@ void SetFirstBlackPixel(StartingSet& set)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void InitialiseEdgesCollection()
+{
+  for (auto i : startingSets)
+  {
+    edges_collection.emplace_back(vector<pair<int, int>>());
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void WriteEdgesToTextFiles()
+{
+  int collectionNumber = 1;
+  for (auto edgecollection : edges_collection)
+  {
+    ofstream movefile(kFolderName + "/" + to_string(collectionNumber) + ".txt");
+    
+    for(const auto p : edgecollection)
+    {
+      movefile << to_string(p.first) << " " << std::to_string(p.second) << "\n";
+    }
+    movefile.close();
+    ++collectionNumber;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 void main()
 {  
+
+  InitialiseEdgesCollection();
+
   CreateDirectoryA(kFolderName.c_str(), nullptr);
 
   source.ReadFromFile(kSourceName);
   
   BMP source_copy = source;
 
+  int currentSetIndex = 0;
   for (auto startingset : startingSets)
   {
     mask_global = new Mask
@@ -290,14 +325,18 @@ void main()
 
     do
     {
-      edges.emplace_back(pixel_global->x, pixel_global->y);
+      edges_collection[currentSetIndex].emplace_back(pixel_global->x, pixel_global->y);
       source.SetPixel(pixel_global->x, pixel_global->y, colour_visited);
     } 
     while (GetNextPoint(*mask_global) == true);
 
     delete mask_global;
     delete pixel_global;
+
+    ++currentSetIndex;
   }
+
+  WriteEdgesToTextFiles();
 
   BMP output;
   output.SetSize(source.TellWidth(), source.TellHeight());
