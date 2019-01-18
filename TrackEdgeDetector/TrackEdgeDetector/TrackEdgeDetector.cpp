@@ -11,7 +11,7 @@
 vector<StartingSet> startingSets =
 {
   //source_simple.bmp
-  StartingSet(Pixel(260, 38), Pixel(260, 37), W), StartingSet(Pixel(260, 41), Pixel(260, 42), W), 
+  //StartingSet(Pixel(260, 38), Pixel(260, 37), W), StartingSet(Pixel(260, 41), Pixel(260, 42), W), 
   
   //source.bmp
   //StartingSet(Pixel(440, 69), Pixel(440, 70), E), StartingSet(Pixel(665, 152), Pixel(665, 151), E) 
@@ -21,12 +21,16 @@ vector<StartingSet> startingSets =
 
   //suzuka_full.bmp
   //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E)
+
+  //source_simple.bmp
+  StartingSet(Pixel(3091, 3431), Pixel(3091, 3430), E), StartingSet(Pixel(3039, 3573), Pixel(3039, 3574), E),
 };
 
-const char* kSourceName = "source_simple.bmp";
+//const char* kSourceName = "source_simple.bmp";
 //const char* kSourceName = "source.bmp";
 //const char* kSourceName = "suzuka_src_fiftypercent.bmp";
 //const char* kSourceName = "suzuka_full.bmp";
+const char* kSourceName = "spliced.bmp";
 
 const char* kOutputName     = "edges.bmp";
 const char* kCompositeName  = "composite.bmp";
@@ -290,7 +294,7 @@ void WriteEdgesToTextFiles()
     
     for(const auto p : edgecollection)
     {
-      movefile << to_string(p.first) << " " << std::to_string(p.second) << "\n";
+      movefile << to_string(p.first) << " " << to_string(p.second) << "\n";
     }
     movefile.close();
     ++collectionNumber;
