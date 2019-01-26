@@ -32,7 +32,7 @@ vector<StartingSet> startingSets =
 //string kSourceName = "source2.bmp";
 //string kSourceName = "suzuka_src_fiftypercent.bmp";
 //string kSourceName = "suzuka_full.bmp";
-string kSourceName = "spliced.bmp";
+string sourceName = "spliced.bmp";
 
 const char* kOutputName     = "edges.bmp";
 const char* kCompositeName  = "composite.bmp";
@@ -350,7 +350,7 @@ int main(const int argc, char* argv[])
 
   if (argc > 1)
   {
-    kSourceName = argv[1];
+    sourceName = argv[1];
     ReInitialiseStartingSets(argv);
   }
 
@@ -358,7 +358,7 @@ int main(const int argc, char* argv[])
 
   CreateDirectoryA(kFolderName.c_str(), nullptr);
 
-  source.ReadFromFile(kSourceName.c_str());
+  source.ReadFromFile(sourceName.c_str());
   
   BMP source_copy = source;
 
