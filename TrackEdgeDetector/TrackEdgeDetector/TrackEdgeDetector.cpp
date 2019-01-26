@@ -306,8 +306,10 @@ void WriteEdgesToTextFiles()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void InitialiseStartingSets(char* argv[])
+void ReInitialiseStartingSets(char* argv[])
 {
+  startingSets.clear();
+
   int i = 1;
 
   //DOING THIS STUPIDLY COS HAVING STRANGE ISSUE WITH CMD ARGS
@@ -338,17 +340,18 @@ int main(const int argc, char* argv[])
   //For debugging!
   #ifdef _DEBUG
   MessageBox(nullptr,L"Attach",L"",0);
+  #endif
   for (int i = 0; i < argc; ++i)
   {
     cout << argv[i] << "\n";
   }
-  #endif
+  cout << "\nDetecting Edges...";
   //
 
   if (argc > 1)
   {
     kSourceName = argv[1];
-    InitialiseStartingSets(argv);
+    ReInitialiseStartingSets(argv);
   }
 
   InitialiseEdgesCollection();
