@@ -10,28 +10,10 @@
 
 vector<StartingSet> startingSets =
 {
-  //source_simple.bmp
-  //StartingSet(Pixel(260, 38), Pixel(260, 37), W), StartingSet(Pixel(260, 41), Pixel(260, 42), W), 
-  
-  //source.bmp //source2.bmp
-  //StartingSet(Pixel(440, 69), Pixel(440, 70), E), StartingSet(Pixel(665, 152), Pixel(665, 151), E) 
-  
-  //suzuka_src_fiftypercent.bmp
-  //StartingSet(Pixel(1505, 7773), Pixel(1505, 7772), W), StartingSet(Pixel(1612, 7867), Pixel(1612, 7868), W), StartingSet(Pixel(3089, 3430), Pixel(3089, 3429), W),
-
-  //suzuka_full.bmp
-  //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E)
-
   //spliced
   StartingSet(Pixel(3091, 3431), Pixel(3091, 3430), E), StartingSet(Pixel(3039, 3573), Pixel(3039, 3574), E),
 };
 
-//string kSourceName;
-//string kSourceName = "source_simple.bmp";
-//string kSourceName = "source.bmp";
-//string kSourceName = "source2.bmp";
-//string kSourceName = "suzuka_src_fiftypercent.bmp";
-//string kSourceName = "suzuka_full.bmp";
 string sourceName = "spliced.bmp";
 
 const char* kOutputName     = "edges.bmp";
