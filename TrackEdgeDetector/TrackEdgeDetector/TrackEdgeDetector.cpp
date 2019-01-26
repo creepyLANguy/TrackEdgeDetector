@@ -13,7 +13,7 @@ vector<StartingSet> startingSets =
   //source_simple.bmp
   //StartingSet(Pixel(260, 38), Pixel(260, 37), W), StartingSet(Pixel(260, 41), Pixel(260, 42), W), 
   
-  //source.bmp
+  //source.bmp //source2.bmp
   //StartingSet(Pixel(440, 69), Pixel(440, 70), E), StartingSet(Pixel(665, 152), Pixel(665, 151), E) 
   
   //suzuka_src_fiftypercent.bmp
@@ -22,19 +22,22 @@ vector<StartingSet> startingSets =
   //suzuka_full.bmp
   //StartingSet(Pixel(3047, 15521), Pixel(3047, 15520), E), StartingSet(Pixel(3228, 15733), Pixel(3228, 15734), E)
 
-  //source_simple.bmp
+  //spliced
   StartingSet(Pixel(3091, 3431), Pixel(3091, 3430), E), StartingSet(Pixel(3039, 3573), Pixel(3039, 3574), E),
 };
 
-//const char* kSourceName = "source_simple.bmp";
-//const char* kSourceName = "source.bmp";
-//const char* kSourceName = "suzuka_src_fiftypercent.bmp";
-//const char* kSourceName = "suzuka_full.bmp";
-const char* kSourceName = "spliced.bmp";
+//string kSourceName;
+//string kSourceName = "source_simple.bmp";
+//string kSourceName = "source.bmp";
+//string kSourceName = "source2.bmp";
+//string kSourceName = "suzuka_src_fiftypercent.bmp";
+//string kSourceName = "suzuka_full.bmp";
+string kSourceName = "spliced.bmp";
 
 const char* kOutputName     = "edges.bmp";
 const char* kCompositeName  = "composite.bmp";
-const string kFolderName    = to_string(GetTickCount());
+const int tickCount         = GetTickCount();
+const string kFolderName    = to_string(tickCount);
 
 //struct order is BGRA for some reason :/
 const RGBApixel colour_visited = { 0, 0, 255, 0 }; //red
@@ -303,14 +306,56 @@ void WriteEdgesToTextFiles()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void main()
+void InitialiseStartingSets(char* argv[])
+{
+  int i = 1;
+
+  //DOING THIS STUPIDLY COS HAVING STRANGE ISSUE WITH CMD ARGS
+  const int m1x1 = atoi(argv[++i]);
+  const int m1y1 = atoi(argv[++i]);
+  const int m1x2 = atoi(argv[++i]);
+  const int m1y2 = atoi(argv[++i]);
+
+  const int m2x1 = atoi(argv[++i]);
+  const int m2y1 = atoi(argv[++i]);
+  const int m2x2 = atoi(argv[++i]);
+  const int m2y2 = atoi(argv[++i]);
+
+
+  startingSets.emplace_back(
+    //StartingSet(Pixel(atoi(argv[++i]), atoi(argv[++i])), Pixel(atoi(argv[++i]), atoi(argv[++i])), FIRST));
+    StartingSet(Pixel(m1x1, m1y1), Pixel(m1x2, m1y2), FIRST));
+  startingSets.emplace_back(
+    //StartingSet(Pixel(atoi(argv[++i]), atoi(argv[++i])), Pixel(atoi(argv[++i]), atoi(argv[++i])), FIRST));
+    StartingSet(Pixel(m2x1, m2y1), Pixel(m2x2, m2y2), FIRST));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+int main(const int argc, char* argv[])
 {  
+  //AL.
+  //For debugging!
+  #ifdef _DEBUG
+  MessageBox(nullptr,L"Attach",L"",0);
+  for (int i = 0; i < argc; ++i)
+  {
+    cout << argv[i] << "\n";
+  }
+  #endif
+  //
+
+  if (argc > 1)
+  {
+    kSourceName = argv[1];
+    InitialiseStartingSets(argv);
+  }
 
   InitialiseEdgesCollection();
 
   CreateDirectoryA(kFolderName.c_str(), nullptr);
 
-  source.ReadFromFile(kSourceName);
+  source.ReadFromFile(kSourceName.c_str());
   
   BMP source_copy = source;
 
@@ -347,6 +392,8 @@ void main()
   DrawEdgesAndSave(output, kOutputName, false);
 
   DrawEdgesAndSave(source_copy, kCompositeName, false, colour_visited);
+
+  return tickCount;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
