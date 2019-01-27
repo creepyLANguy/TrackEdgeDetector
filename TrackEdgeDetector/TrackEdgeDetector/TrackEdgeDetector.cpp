@@ -316,6 +316,21 @@ void ReInitialiseStartingSets(char* argv[])
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void ShowError()
+{
+  wstring msg = L"Could not find : ";
+  msg += wstring(sourceName.begin(), sourceName.end());
+
+  MessageBox(
+    nullptr,
+    msg.c_str(),
+    L"Error",
+    MB_ICONEXCLAMATION
+  );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 int main(const int argc, char* argv[])
 {  
   //AL.
@@ -338,9 +353,14 @@ int main(const int argc, char* argv[])
 
   InitialiseEdgesCollection();
 
-  CreateDirectoryA(kFolderName.c_str(), nullptr);
 
-  source.ReadFromFile(sourceName.c_str());
+  if (source.ReadFromFile(sourceName.c_str()) == false)
+  {
+    ShowError();
+    return -1;
+  }
+
+  CreateDirectoryA(kFolderName.c_str(), nullptr);
   
   BMP source_copy = source;
 
