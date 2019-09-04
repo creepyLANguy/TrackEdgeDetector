@@ -18,7 +18,7 @@ string sourceName = "spliced.bmp";
 
 const char* kOutputName     = "edges.bmp";
 const char* kCompositeName  = "composite.bmp";
-const int tickCount         = GetTickCount64();
+const int tickCount = abs(static_cast<int>(GetTickCount()));
 const string kFolderName    = to_string(tickCount);
 
 //struct order is BGRA for some reason :/
